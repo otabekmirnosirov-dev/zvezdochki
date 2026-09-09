@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Звёздочки · Shopulatov</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#221A4D; --night2:#2C2266; --card:#342A78; --line:#463A94;
+  --cream:#FFF6E6; --star:#FFC93C; --mint:#42D6A4; --coral:#FF6B6B; --sky:#5AC8FA;
+  --r:20px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--night); color:var(--cream);
+  font-family:'Nunito',system-ui,sans-serif; font-size:16px; line-height:1.4;
+  padding-bottom:calc(80px + env(safe-area-inset-bottom));
+  overscroll-behavior-y:none;
+  background-image:radial-gradient(1px 1px at 12% 18%,rgba(255,255,255,.5),transparent),
+                   radial-gradient(1px 1px at 78% 9%,rgba(255,255,255,.4),transparent),
+                   radial-gradient(1.5px 1.5px at 44% 30%,rgba(255,255,255,.35),transparent),
+                   radial-gradient(1px 1px at 90% 42%,rgba(255,255,255,.3),transparent);
+  background-attachment:fixed;
+}
+h1,h2,h3{font-family:'Baloo 2',cursive;margin:0;letter-spacing:0}
+button{font-family:inherit;cursor:pointer}
+.wrap{padding:0 16px}
+
+/* header */
+header{padding:calc(14px + env(safe-area-inset-top)) 16px 12px;display:flex;align-items:center;gap:10px}
+.logo{font-family:'Baloo 2';font-weight:800;font-size:17px}
+.logo b{color:var(--star)}
+.conn{margin-left:auto;font-size:11px;color:#A79FD8;display:flex;align-items:center;gap:5px}
+.d{width:7px;height:7px;border-radius:99px;background:var(--coral)}
+.d.ok{background:var(--mint)}
+
+/* star card */
+.starcard{margin:4px 16px 0;background:linear-gradient(160deg,#3A2E88,#2A2166);
+  border:1px solid var(--line);border-radius:26px;padding:20px;text-align:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.28)}
+.hi{font-size:13px;color:#B9B1E8}
+.myname{font-family:'Baloo 2';font-weight:800;font-size:24px;margin:2px 0 12px}
+.bigstar{font-size:64px;line-height:1;filter:drop-shadow(0 6px 14px rgba(255,201,60,.4));
+  display:inline-block;animation:bob 3.4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-7px) rotate(-4deg)}}
+.count{font-family:'Baloo 2';font-weight:800;font-size:54px;line-height:1;color:var(--star);
+  letter-spacing:-.02em}
+.countlab{font-size:14px;color:#B9B1E8;margin-top:2px}
+.place{display:inline-block;margin-top:14px;background:rgba(255,255,255,.1);
+  border-radius:99px;padding:7px 16px;font-weight:700;font-size:14px}
+.place b{color:var(--star)}
+
+/* next award progress */
+.next{margin:12px 16px 0;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r);padding:15px}
+.next-top{display:flex;align-items:center;gap:12px}
+.next-emoji{font-size:30px}
+.next h3{font-size:16px;font-weight:700}
+.next p{margin:2px 0 0;font-size:13px;color:#B9B1E8}
+.pbar{height:12px;background:#241C5C;border-radius:99px;margin-top:12px;overflow:hidden}
+.pbar i{display:block;height:100%;width:0;border-radius:99px;
+  background:linear-gradient(90deg,var(--star),var(--mint));transition:width .8s cubic-bezier(.2,.8,.2,1)}
+
+/* sections */
+section{display:none;animation:fade .2s}section.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.h{font-family:'Baloo 2';font-weight:700;font-size:18px;margin:22px 0 10px;
+  display:flex;justify-content:space-between;align-items:baseline}
+.h span{font-family:'Nunito';font-size:12px;color:#A79FD8;font-weight:600}
+
+.row{display:flex;align-items:center;gap:12px;background:var(--card);
+  border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:8px}
+.row.me{border-color:var(--star);background:linear-gradient(90deg,rgba(255,201,60,.15),var(--card))}
+.medal{width:34px;text-align:center;font-size:19px;font-weight:800;font-family:'Baloo 2';color:#A79FD8}
+.rname{flex:1;font-weight:700;font-size:15px}
+.rpts{font-family:'Baloo 2';font-weight:800;font-size:19px;color:var(--star)}
+.rpts small{font-size:13px}
+
+/* awards */
+.awards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.aw{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 12px;text-align:center;position:relative;overflow:hidden}
+.aw.got{border-color:var(--mint);background:linear-gradient(180deg,rgba(66,214,164,.16),var(--card))}
+.aw .em{font-size:38px;line-height:1}
+.aw h3{font-size:14px;font-weight:700;margin-top:7px}
+.aw .cost{margin-top:6px;display:inline-block;background:#241C5C;border-radius:99px;
+  padding:4px 11px;font-weight:800;font-size:13px;color:var(--star)}
+.aw.got .cost{background:var(--mint);color:#123}
+.aw.locked{opacity:.55}
+.aw .left{font-size:11px;color:#B9B1E8;margin-top:6px}
+
+/* profile / history */
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.pcard .big{font-family:'Baloo 2';font-weight:800;font-size:22px}
+.log{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.log:last-child{border:0}
+.log .p{font-family:'Baloo 2';font-weight:800;color:var(--mint);width:40px}
+.log .p.neg{color:var(--coral)}
+.log .n{flex:1;color:#D8D2F5}
+.log .t{font-size:11px;color:#8F87C7}
+
+/* choose-me */
+.choose{margin:14px 16px;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r);padding:18px}
+.choose h2{font-size:20px;margin-bottom:4px}
+.choose p{font-size:13px;color:#B9B1E8;margin:0 0 14px}
+.mebtn{width:100%;text-align:left;background:#2A2166;border:1px solid var(--line);
+  border-radius:14px;padding:13px 15px;color:var(--cream);font-weight:700;font-size:15px;margin-bottom:7px}
+.mebtn:active{background:var(--star);color:#221A4D}
+
+/* admin */
+.arow{display:flex;align-items:center;gap:8px;background:var(--card);
+  border:1px solid var(--line);border-radius:16px;padding:10px 12px;margin-bottom:8px}
+.arow .n{flex:1;font-weight:700;font-size:15px}
+.arow .v{font-family:'Baloo 2';font-weight:800;font-size:18px;color:var(--star);min-width:34px;text-align:right}
+.plus{width:40px;height:40px;border-radius:12px;border:0;background:var(--mint);color:#123;
+  font-family:'Baloo 2';font-weight:800;font-size:19px}
+.minus{width:34px;height:40px;border-radius:12px;border:1px solid var(--line);
+  background:transparent;color:var(--coral);font-weight:800;font-size:17px}
+.inp{width:100%;background:#241C5C;border:1px solid var(--line);border-radius:12px;
+  padding:12px 14px;color:var(--cream);font-size:15px;font-family:inherit;margin-bottom:9px}
+.inp:focus{outline:none;border-color:var(--star)}
+.btn{width:100%;background:var(--star);color:#221A4D;border:0;border-radius:14px;
+  padding:14px;font-family:'Baloo 2';font-weight:800;font-size:16px}
+.btn.sec{background:#2A2166;color:var(--cream);border:1px solid var(--line)}
+.btn+.btn{margin-top:8px}
+
+nav{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);
+  background:rgba(28,21,72,.95);backdrop-filter:blur(14px);border-top:1px solid var(--line);
+  padding:9px 6px calc(9px + env(safe-area-inset-bottom));z-index:9}
+nav.adm{grid-template-columns:repeat(5,1fr)}
+nav button{background:none;border:0;color:#8F87C7;font-size:10px;font-weight:700;
+  display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 2px}
+nav button .ic{font-size:20px;line-height:1}
+nav button.on{color:var(--star)}
+.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--mint);
+  color:#0F2B22;font-family:'Baloo 2';font-weight:800;font-size:15px;padding:10px 20px;
+  border-radius:99px;opacity:0;pointer-events:none;transition:.22s;z-index:30}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-8px)}
+.empty{text-align:center;color:#8F87C7;font-size:14px;padding:28px 12px}
+.foot{text-align:center;font-size:11px;color:#6F67A8;padding:20px 0 6px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⭐ <b>Звёздочки</b></div>
+  <div class="conn"><span class="d" id="dot"></span><span id="conntxt">…</span></div>
+</header>
+
+<!-- выбор себя при первом входе -->
+<div class="choose" id="choose" style="display:none">
+  <h2>Привет! Найди себя в списке</h2>
+  <p>Нажми на своё имя — только один раз, потом приложение тебя запомнит.</p>
+  <div id="melist"></div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="starcard">
+    <div class="hi">Привет,</div>
+    <div class="myname" id="myname">—</div>
+    <div class="bigstar">⭐</div>
+    <div class="count" id="mypts">0</div>
+    <div class="countlab" id="ptslab">звёздочек</div>
+    <div class="place">Место в группе: <b id="myplace">—</b></div>
+  </div>
+
+  <div class="next" id="nextbox">
+    <div class="next-top">
+      <div class="next-emoji" id="nx-em">🎁</div>
+      <div style="flex:1"><h3 id="nx-t">—</h3><p id="nx-p">—</p></div>
+    </div>
+    <div class="pbar"><i id="nx-bar"></i></div>
+  </div>
+
+  <div class="wrap">
+    <!-- МОИ ЗВЁЗДОЧКИ -->
+    <section id="tab-me" class="on">
+      <div class="h">Как я их получил <span id="logcount"></span></div>
+      <div class="pcard" id="mylog"></div>
+    </section>
+
+    <!-- ЛИДЕРЫ -->
+    <section id="tab-top">
+      <div class="h">Лидеры группы</div>
+      <div id="leaders"></div>
+    </section>
+
+    <!-- ГРУППА -->
+    <section id="tab-group">
+      <div class="h">Наша группа <span id="gcount"></span></div>
+      <div id="grouplist"></div>
+    </section>
+
+    <!-- НАГРАДЫ -->
+    <section id="tab-aw">
+      <div class="h">Награды <span>копи звёздочки</span></div>
+      <div class="awards" id="awards"></div>
+      <p style="font-size:12px;color:#8F87C7;margin-top:12px">
+        Награду выдаёт преподаватель на уроке. Звёздочки при этом не сгорают —
+        это отметка того, чего ты достиг.</p>
+    </section>
+
+    <!-- УЧИТЕЛЬ -->
+    <section id="tab-adm">
+      <div id="login">
+        <div class="h">Вход преподавателя</div>
+        <div class="pcard">
+          <input class="inp" id="mail" type="email" placeholder="e-mail" autocomplete="username">
+          <input class="inp" id="pass" type="password" placeholder="пароль" autocomplete="current-password">
+          <button class="btn" id="dologin">Войти</button>
+          <p id="lerr" style="font-size:13px;color:var(--coral);margin:10px 0 0"></p>
+        </div>
+      </div>
+      <div id="panel" style="display:none">
+        <div class="h">Урок идёт <span>жми + за активность</span></div>
+        <div id="marklist"></div>
+        <div class="h">Управление</div>
+        <button class="btn sec" id="addstud">Добавить ученика</button>
+        <button class="btn sec" id="addaward">Добавить награду</button>
+        <button class="btn sec" id="setgroup">Название группы</button>
+        <button class="btn sec" id="logout" style="color:var(--coral)">Выйти</button>
+      </div>
+    </section>
+
+    <div class="foot">Shopulatov Math School</div>
+  </div>
+</div>
+
+<div class="toast" id="toast">+1 ⭐</div>
+
+<nav id="nav">
+  <button class="on" data-tab="me"><span class="ic">⭐</span>Мои</button>
+  <button data-tab="top"><span class="ic">🏆</span>Лидеры</button>
+  <button data-tab="group"><span class="ic">👥</span>Группа</button>
+  <button data-tab="aw"><span class="ic">🎁</span>Награды</button>
+</nav>
+
+<script type="module">
+/* ============================================================
+   ВСТАВЬ КОНФИГ FIREBASE (Project settings → Web app)
+   ============================================================ */
+const firebaseConfig = {
+  apiKey:            "AIzaSyAtM2L-RuGWXyfMhmrsAvtZJbKlE5gUY8w",
+  authDomain:        "stars777-8c94a.firebaseapp.com",
+  databaseURL:       "https://stars777-8c94a-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "stars777-8c94a",
+  storageBucket:     "stars777-8c94a.firebasestorage.app",
+  messagingSenderId: "347269868166",
+  appId:             "1:347269868166:web:57061875897739b3c1bf07"
+};
+const ADMIN_EMAIL = "otabekmirnosirov@gmail.com";   // <-- замени на свой gmail, строчными буквами
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, update, push, set, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app), auth = getAuth(app);
+
+const tg = window.Telegram?.WebApp;
+if (tg){ tg.ready(); tg.expand();
+  try{ tg.setHeaderColor('#221A4D'); tg.setBackgroundColor('#221A4D'); }catch(e){} }
+const buzz = t=>{ try{ tg?.HapticFeedback?.impactOccurred(t||'light'); }catch(e){} };
+const TGID = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : null;
+
+const $ = s=>document.querySelector(s);
+let S = { meta:{}, students:{}, log:{}, awards:{} };
+let ME = localStorage.getItem('me') || null;
+let isAdmin = false;
+
+const plural = n => { const a=Math.abs(n)%100, b=a%10;
+  if(a>10&&a<20) return 'звёздочек'; if(b===1) return 'звёздочка';
+  if(b>1&&b<5) return 'звёздочки'; return 'звёздочек'; };
+const ptsOf = id => Object.values(S.log).filter(e=>e.sid===id).reduce((s,e)=>s+(e.p||0),0);
+const nameOf = id => S.students[id]?.name || '—';
+const ranked = () => Object.keys(S.students).sort((a,b)=>ptsOf(b)-ptsOf(a)||nameOf(a).localeCompare(nameOf(b),'ru'));
+
+onValue(ref(db,'/'), snap=>{
+  const v = snap.val()||{};
+  S.meta=v.meta||{}; S.students=v.students||{}; S.log=v.log||{}; S.awards=v.awards||{};
+  $('#dot').className='d ok'; $('#conntxt').textContent='онлайн';
+  // авто-привязка по Telegram
+  if(!ME && TGID){
+    const found = Object.entries(S.students).find(([,s])=>String(s.tgid)===TGID);
+    if(found){ ME=found[0]; localStorage.setItem('me',ME); }
+  }
+  render();
+}, ()=>{ $('#conntxt').textContent='нет связи'; });
+
+function render(){
+  const have = ME && S.students[ME];
+  $('#choose').style.display = have?'none':'block';
+  $('#app').style.display    = have?'block':'none';
+  if(!have){ renderChoose(); return; }
+  renderMe(); renderTop(); renderGroup(); renderAwards();
+  if(isAdmin) renderAdmin();
+}
+
+function renderChoose(){
+  const ids = Object.keys(S.students).sort((a,b)=>nameOf(a).localeCompare(nameOf(b),'ru'));
+  $('#melist').innerHTML = ids.length
+    ? ids.map(id=>`<button class="mebtn" data-me="${id}">${nameOf(id)}</button>`).join('')
+    : '<div class="empty">Учитель ещё не добавил учеников.</div>';
+}
+
+function renderMe(){
+  const p = ptsOf(ME), place = ranked().indexOf(ME)+1;
+  $('#myname').textContent = nameOf(ME);
+  $('#mypts').textContent = p;
+  $('#ptslab').textContent = plural(p);
+  $('#myplace').textContent = place + ' из ' + Object.keys(S.students).length;
+
+  const aw = Object.values(S.awards).sort((a,b)=>a.cost-b.cost);
+  const nx = aw.find(a=>a.cost>p);
+  if(nx){
+    $('#nextbox').style.display='block';
+    $('#nx-em').textContent = nx.emoji||'🎁';
+    $('#nx-t').textContent = 'Следующая награда: '+nx.title;
+    const left = nx.cost-p;
+    $('#nx-p').textContent = `осталось ${left} ${plural(left)} из ${nx.cost}`;
+    setTimeout(()=>$('#nx-bar').style.width = Math.min(100,p/nx.cost*100)+'%',60);
+  } else if(aw.length){
+    $('#nextbox').style.display='block';
+    $('#nx-em').textContent='🎉'; $('#nx-t').textContent='Все награды открыты!';
+    $('#nx-p').textContent='Ты собрал больше всех звёздочек, чем есть наград.';
+    setTimeout(()=>$('#nx-bar').style.width='100%',60);
+  } else $('#nextbox').style.display='none';
+
+  const mine = Object.entries(S.log).filter(([,e])=>e.sid===ME)
+    .sort((a,b)=>(b[1].ts||0)-(a[1].ts||0)).slice(0,25);
+  $('#logcount').textContent = mine.length?('всего '+mine.length):'';
+  $('#mylog').innerHTML = mine.length ? mine.map(([,e])=>`
+    <div class="log"><div class="p ${e.p<0?'neg':''}">${e.p>0?'+'+e.p:e.p}</div>
+    <div class="n">${e.note||'активность на уроке'}</div>
+    <div class="t">${e.ts?new Date(e.ts).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}):''}</div></div>`).join('')
+    : '<div class="empty">Звёздочек пока нет. Всё впереди!</div>';
+}
+
+function renderTop(){
+  const ids = ranked().slice(0,10);
+  const med = ['🥇','🥈','🥉'];
+  $('#leaders').innerHTML = ids.length ? ids.map((id,i)=>`
+    <div class="row ${id===ME?'me':''}">
+      <div class="medal">${med[i]||(i+1)}</div>
+      <div class="rname">${nameOf(id)}${id===ME?' · ты':''}</div>
+      <div class="rpts">${ptsOf(id)}<small> ⭐</small></div>
+    </div>`).join('') : '<div class="empty">Пока пусто.</div>';
+}
+
+function renderGroup(){
+  const ids = Object.keys(S.students).sort((a,b)=>nameOf(a).localeCompare(nameOf(b),'ru'));
+  $('#gcount').textContent = S.meta.group ? S.meta.group+' · '+ids.length : ids.length+' учеников';
+  $('#grouplist').innerHTML = ids.map(id=>`
+    <div class="row ${id===ME?'me':''}">
+      <div class="medal">${(ranked().indexOf(id)+1)}</div>
+      <div class="rname">${nameOf(id)}</div>
+      <div class="rpts">${ptsOf(id)}<small> ⭐</small></div>
+    </div>`).join('') || '<div class="empty">Пока пусто.</div>';
+}
+
+function renderAwards(){
+  const p = ptsOf(ME);
+  const aw = Object.values(S.awards).sort((a,b)=>a.cost-b.cost);
+  $('#awards').innerHTML = aw.length ? aw.map(a=>{
+    const got = p>=a.cost;
+    return `<div class="aw ${got?'got':'locked'}">
+      <div class="em">${a.emoji||'🎁'}</div>
+      <h3>${a.title}</h3>
+      <div class="cost">${got?'открыто':a.cost+' ⭐'}</div>
+      ${got?'':`<div class="left">ещё ${a.cost-p}</div>`}
+    </div>`;}).join('') : '<div class="empty">Награды скоро появятся.</div>';
+}
+
+/* ---------- админ ---------- */
+function renderAdmin(){
+  const ids = Object.keys(S.students).sort((a,b)=>nameOf(a).localeCompare(nameOf(b),'ru'));
+  $('#marklist').innerHTML = ids.length ? ids.map(id=>`
+    <div class="arow">
+      <div class="n">${nameOf(id)}</div>
+      <div class="v">${ptsOf(id)} ⭐</div>
+      <button class="minus" data-give="${id}" data-p="-1">−</button>
+      <button class="plus"  data-give="${id}" data-p="1">+1</button>
+    </div>`).join('') : '<div class="empty">Добавь учеников кнопкой ниже.</div>';
+}
+
+document.addEventListener('click', async e=>{
+  const me = e.target.closest('[data-me]');
+  if(me){ ME = me.dataset.me; localStorage.setItem('me',ME); buzz('medium');
+    if(TGID) update(ref(db,`students/${ME}`),{tgid:TGID}).catch(()=>{});
+    render(); return; }
+
+  const g = e.target.closest('[data-give]');
+  if(g && isAdmin){
+    const p = +g.dataset.p;
+    await push(ref(db,'log'), {sid:g.dataset.give, p, ts:Date.now(),
+      note: p>0?'активность на уроке':'снят балл'});
+    buzz('medium'); toast(p>0?'+1 ⭐':'−1');
+    return;
+  }
+});
+
+function toast(t){ const el=$('#toast'); el.textContent=t; el.classList.add('show');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),1100); }
+
+$('#dologin').onclick = async ()=>{
+  $('#lerr').textContent='';
+  try{ await signInWithEmailAndPassword(auth,$('#mail').value.trim(),$('#pass').value); }
+  catch{ $('#lerr').textContent='Не вышло войти. Проверь почту и пароль.'; }
+};
+$('#logout').onclick = ()=>signOut(auth);
+onAuthStateChanged(auth,u=>{
+  isAdmin = !!u && u.email===ADMIN_EMAIL;
+  $('#login').style.display = isAdmin?'none':'block';
+  $('#panel').style.display = isAdmin?'block':'none';
+  if(isAdmin) renderAdmin();
+});
+
+$('#addstud').onclick = async ()=>{
+  const n = prompt('Имя и фамилия ученика'); if(!n) return;
+  await push(ref(db,'students'),{name:n.trim()}); toast('Добавлен');
+};
+$('#addaward').onclick = async ()=>{
+  const t = prompt('Название награды, напр. «Кружка школы»'); if(!t) return;
+  const c = parseInt(prompt('Сколько звёздочек стоит?','30'),10); if(!c) return;
+  const em = prompt('Значок (эмодзи)','🎁') || '🎁';
+  await push(ref(db,'awards'),{title:t.trim(),cost:c,emoji:em}); toast('Награда добавлена');
+};
+$('#setgroup').onclick = async ()=>{
+  const g = prompt('Название группы', S.meta.group||'D15 math group');
+  await update(ref(db,'meta'),{group:g||''}); toast('Сохранено');
+};
+
+/* ---------- табы ---------- */
+const nav = $('#nav');
+function bind(){ nav.querySelectorAll('button').forEach(b=> b.onclick = ()=>{
+  buzz();
+  nav.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('section').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); $('#tab-'+b.dataset.tab).classList.add('on');
+  const adm = b.dataset.tab==='adm';
+  $('.starcard').style.display = adm?'none':'block';
+  $('#nextbox').style.display  = adm?'none':'block';
+  window.scrollTo({top:0,behavior:'smooth'});
+});}
+bind();
+if(location.search.includes('admin')||location.hash.includes('admin')||localStorage.getItem('adm')==='1'){
+  localStorage.setItem('adm','1');
+  nav.classList.add('adm');
+  nav.insertAdjacentHTML('beforeend','<button data-tab="adm"><span class="ic">📋</span>Учитель</button>');
+  bind();
+}
+</script>
+</body>
+</html>
