@@ -120,6 +120,16 @@ section{display:none;animation:fade .2s}section.on{display:block}
   font-family:'Baloo 2';font-weight:800;font-size:19px}
 .minus{width:34px;height:40px;border-radius:12px;border:1px solid var(--line);
   background:transparent;color:var(--coral);font-weight:800;font-size:17px}
+.gear{width:34px;height:40px;border-radius:12px;border:1px solid var(--line);
+  background:transparent;color:#B9B1E8;font-size:16px}
+.arow .link{font-size:11px;color:var(--mint);margin-top:2px;font-weight:700}
+.arow .link.no{color:#8F87C7}
+.awrow{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);
+  border-radius:14px;padding:10px 12px;margin-bottom:7px}
+.awrow .e{font-size:22px}
+.awrow .t{flex:1;font-weight:700;font-size:14px}
+.awrow .c{font-family:'Baloo 2';font-weight:800;color:var(--star)}
+.danger{background:var(--coral)!important;color:#fff!important}
 .inp{width:100%;background:#241C5C;border:1px solid var(--line);border-radius:12px;
   padding:12px 14px;color:var(--cream);font-size:15px;font-family:inherit;margin-bottom:9px}
 .inp:focus{outline:none;border-color:var(--star)}
@@ -233,6 +243,8 @@ nav button.on{color:var(--star)}
       <div id="panel" style="display:none">
         <div class="h">Урок идёт <span>жми + за активность</span></div>
         <div id="marklist"></div>
+        <div class="h">Награды</div>
+        <div id="awmanage"></div>
         <div class="h">Управление</div>
         <button class="btn sec" id="addstud">Добавить ученика</button>
         <button class="btn sec" id="addaward">Добавить награду</button>
@@ -272,7 +284,7 @@ const firebaseConfig = {
 const ADMIN_EMAIL = "otabekmirnosirov@gmail.com";
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, update, push, set, serverTimestamp }
+import { getDatabase, ref, onValue, update, push, set, remove, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
   setPersistence, browserLocalPersistence, indexedDBLocalPersistence }
@@ -406,13 +418,24 @@ function renderAwards(){
 /* ---------- админ ---------- */
 function renderAdmin(){
   const ids = Object.keys(S.students).sort((a,b)=>nameOf(a).localeCompare(nameOf(b),'ru'));
-  $('#marklist').innerHTML = ids.length ? ids.map(id=>`
-    <div class="arow">
-      <div class="n">${nameOf(id)}</div>
+  $('#marklist').innerHTML = ids.length ? ids.map(id=>{
+    const linked = !!S.students[id].tgid;
+    return `<div class="arow">
+      <div class="n">${nameOf(id)}
+        <div class="link ${linked?'':'no'}">${linked?'вошёл':'ещё не заходил'}</div></div>
       <div class="v">${ptsOf(id)} ⭐</div>
+      <button class="gear" data-edit="${id}">⚙</button>
       <button class="minus" data-give="${id}" data-p="-1">−</button>
       <button class="plus"  data-give="${id}" data-p="1">+1</button>
-    </div>`).join('') : '<div class="empty">Добавь учеников кнопкой ниже.</div>';
+    </div>`;}).join('') : '<div class="empty">Добавь учеников кнопкой ниже.</div>';
+
+  const aw = Object.entries(S.awards).sort((a,b)=>a[1].cost-b[1].cost);
+  const box = $('#awmanage');
+  if(box) box.innerHTML = aw.length ? aw.map(([k,a])=>`
+    <div class="awrow"><div class="e">${a.emoji||'🎁'}</div>
+      <div class="t">${a.title}</div><div class="c">${a.cost} ⭐</div>
+      <button class="gear" data-awdel="${k}">🗑</button></div>`).join('')
+    : '<div class="empty">Наград пока нет.</div>';
 }
 
 document.addEventListener('click', async e=>{
@@ -493,6 +516,47 @@ document.addEventListener('click', async e=>{
   if(ep){ $('#m-emoji').querySelectorAll('.ep').forEach(x=>x.classList.remove('on'));
     ep.classList.add('on'); return; }
 
+  const ed = e.target.closest('[data-edit]');
+  if(ed && isAdmin){
+    const id = ed.dataset.edit, st = S.students[id], linked = !!st.tgid;
+    openModal(`
+      <h2>${st.name}</h2>
+      <div class="sub">${linked?'Ученик уже вошёл в приложение.':'Ученик ещё не заходил.'} Звёздочек: ${ptsOf(id)}</div>
+      <label>Имя</label>
+      <input class="inp" id="m-ren" value="${st.name.replace(/"/g,'&quot;')}">
+      <button class="btn" id="m-do-ren" data-id="${id}">Сохранить имя</button>
+      ${linked?`<button class="btn sec" id="m-unlink" data-id="${id}" style="margin-top:8px">Сбросить вход (выбрал не то имя)</button>`:''}
+      <button class="btn sec" id="m-zero" data-id="${id}" style="margin-top:8px">Обнулить звёздочки</button>
+      <button class="btn sec danger" id="m-del" data-id="${id}" style="margin-top:8px">Удалить ученика</button>
+      <button class="btn sec" data-close style="margin-top:14px">Закрыть</button>`);
+    return;
+  }
+  if(e.target.id==='m-do-ren'){
+    const v = $('#m-ren').value.trim(); if(!v) return;
+    await update(ref(db,'students/'+e.target.dataset.id),{name:v});
+    closeModal(); toast('Имя изменено'); return;
+  }
+  if(e.target.id==='m-unlink'){
+    await remove(ref(db,'students/'+e.target.dataset.id+'/tgid'));
+    closeModal(); toast('Вход сброшен'); return;
+  }
+  if(e.target.id==='m-zero'){
+    const id = e.target.dataset.id;
+    for(const [k,v] of Object.entries(S.log)) if(v.sid===id) await remove(ref(db,'log/'+k));
+    closeModal(); toast('Звёздочки обнулены'); return;
+  }
+  if(e.target.id==='m-del'){
+    const id = e.target.dataset.id;
+    if(e.target.textContent!=='Точно удалить?'){ e.target.textContent='Точно удалить?'; return; }
+    for(const [k,v] of Object.entries(S.log)) if(v.sid===id) await remove(ref(db,'log/'+k));
+    await remove(ref(db,'students/'+id));
+    closeModal(); toast('Удалён'); return;
+  }
+  const ad = e.target.closest('[data-awdel]');
+  if(ad && isAdmin){
+    if(ad.textContent!=='✓'){ ad.textContent='✓'; setTimeout(()=>{if(ad)ad.textContent='🗑';},2500); return; }
+    await remove(ref(db,'awards/'+ad.dataset.awdel)); toast('Награда удалена'); return;
+  }
   if(e.target.id==='m-save-stud'){
     const names = $('#m-names').value.split('\n').map(x=>x.trim()).filter(Boolean);
     if(!names.length) return closeModal();
