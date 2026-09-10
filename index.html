@@ -253,7 +253,7 @@ const firebaseConfig = {
   messagingSenderId: "347269868166",
   appId:             "1:347269868166:web:57061875897739b3c1bf07"
 };
-const ADMIN_EMAIL = "otabekmirnosirov@gmail.com";   // <-- замени на свой gmail, строчными буквами
+const ADMIN_EMAIL = "СЮДА_СВОЙ_GMAIL";   // <-- замени на свой gmail, строчными буквами
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, onValue, update, push, set, serverTimestamp }
@@ -295,11 +295,17 @@ onValue(ref(db,'/'), snap=>{
 }, ()=>{ $('#conntxt').textContent='нет связи'; });
 
 function render(){
-  const have = ME && S.students[ME];
-  $('#choose').style.display = have?'none':'block';
-  $('#app').style.display    = have?'block':'none';
-  if(!have){ renderChoose(); return; }
-  renderMe(); renderTop(); renderGroup(); renderAwards();
+  const have = !!(ME && S.students[ME]);
+  const admMode = localStorage.getItem('adm')==='1';
+  const onAdmTab = document.querySelector('#tab-adm')?.classList.contains('on');
+  // экран выбора показываем только ученику и только вне вкладки учителя
+  $('#choose').style.display = (!have && !onAdmTab) ? 'block' : 'none';
+  $('#app').style.display    = (have || admMode) ? 'block' : 'none';
+  $('.starcard').style.display = (have && !onAdmTab) ? 'block' : 'none';
+  $('#nextbox').style.display  = (have && !onAdmTab) ? 'block' : 'none';
+  renderChoose();
+  if(have) renderMe();
+  renderTop(); renderGroup(); renderAwards();
   if(isAdmin) renderAdmin();
 }
 
@@ -366,7 +372,7 @@ function renderGroup(){
 }
 
 function renderAwards(){
-  const p = ptsOf(ME);
+  const p = (ME && S.students[ME]) ? ptsOf(ME) : 0;
   const aw = Object.values(S.awards).sort((a,b)=>a.cost-b.cost);
   $('#awards').innerHTML = aw.length ? aw.map(a=>{
     const got = p>=a.cost;
@@ -444,9 +450,7 @@ function bind(){ nav.querySelectorAll('button').forEach(b=> b.onclick = ()=>{
   nav.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
   document.querySelectorAll('section').forEach(x=>x.classList.remove('on'));
   b.classList.add('on'); $('#tab-'+b.dataset.tab).classList.add('on');
-  const adm = b.dataset.tab==='adm';
-  $('.starcard').style.display = adm?'none':'block';
-  $('#nextbox').style.display  = adm?'none':'block';
+  render();
   window.scrollTo({top:0,behavior:'smooth'});
 });}
 bind();
