@@ -274,11 +274,14 @@ const ADMIN_EMAIL = "otabekmirnosirov@gmail.com";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, onValue, update, push, set, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  setPersistence, browserLocalPersistence, indexedDBLocalPersistence }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app), auth = getAuth(app);
+// держим сессию учителя внутри Telegram, чтобы не входить каждый раз
+setPersistence(auth, indexedDBLocalPersistence).catch(()=>setPersistence(auth, browserLocalPersistence)).catch(()=>{});
 
 const tg = window.Telegram?.WebApp;
 if (tg){ tg.ready(); tg.expand();
@@ -523,12 +526,24 @@ function bind(){ nav.querySelectorAll('button').forEach(b=> b.onclick = ()=>{
   window.scrollTo({top:0,behavior:'smooth'});
 });}
 bind();
-if(location.search.includes('admin')||location.hash.includes('admin')||localStorage.getItem('adm')==='1'){
+function unlockAdmin(){
+  if(nav.querySelector('[data-tab=adm]')) return;
   localStorage.setItem('adm','1');
   nav.classList.add('adm');
   nav.insertAdjacentHTML('beforeend','<button data-tab="adm"><span class="ic">📋</span>Учитель</button>');
   bind();
 }
+const startParam = tg?.initDataUnsafe?.start_param || '';
+if(location.search.includes('admin') || location.hash.includes('admin')
+   || startParam === 'admin' || localStorage.getItem('adm')==='1') unlockAdmin();
+
+// запасной вход: 5 быстрых нажатий по логотипу «Звёздочки»
+let taps=0, tapT=null;
+document.querySelector('.logo').addEventListener('click', ()=>{
+  taps++; clearTimeout(tapT); tapT=setTimeout(()=>taps=0,1200);
+  if(taps>=5){ taps=0; unlockAdmin(); buzz('medium'); toast('Режим учителя открыт');
+    const b=nav.querySelector('[data-tab=adm]'); if(b) b.click(); }
+});
 </script>
 </body>
 </html>
