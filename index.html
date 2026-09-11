@@ -2,6 +2,9 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Звёздочки · Shopulatov</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -334,6 +337,7 @@ nav button.on .ic{transform:translateY(-3px) scale(1.16)}
         <button class="btn sec" id="addstud">Добавить учеников</button>
         <button class="btn sec" id="addaward">Добавить награду</button>
         <button class="btn sec" id="setgroup">Название группы</button>
+        <button class="btn sec" id="pushupd">🔄 Обновить приложение у всех</button>
         <button class="btn sec" id="logout" style="color:var(--coral)">Выйти</button>
       </div>
     </section>
@@ -363,6 +367,7 @@ const firebaseConfig = {
   appId:             "1:347269868166:web:57061875897739b3c1bf07"
 };
 const ADMIN_EMAIL = "otabekmirnosirov@gmail.com";
+const APP_VERSION = "2026-09-11-a";   // меняется при каждом обновлении файла
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, onValue, update, push, set, remove }
@@ -405,6 +410,15 @@ onValue(ref(db,'/'),snap=>{
   const v=snap.val()||{};
   S.meta=v.meta||{}; S.students=v.students||{}; S.log=v.log||{}; S.awards=v.awards||{};
   $('#dot').className='d ok'; $('#conntxt').textContent='онлайн';
+  // авто-обновление: учитель нажал «Обновить у всех» — клиенты перезагружаются сами
+  const want = S.meta.version;
+  if(want && want !== APP_VERSION && localStorage.getItem('tried_v') !== want){
+    localStorage.setItem('tried_v', want);
+    const u = new URL(location.href);
+    u.searchParams.set('v', want);
+    location.replace(u.toString());
+    return;
+  }
   if(!ME&&TGID){
     const f=Object.entries(S.students).find(([,s])=>String(s.tgid)===TGID);
     if(f){ME=f[0];localStorage.setItem('me',ME);}
@@ -760,6 +774,11 @@ document.addEventListener('click',async e=>{
 $('#dologin').onclick=async()=>{$('#lerr').textContent='';
   try{await signInWithEmailAndPassword(auth,$('#mail').value.trim(),$('#pass').value);}
   catch{$('#lerr').textContent='Не вышло войти. Проверь почту и пароль.';}};
+$('#pushupd').onclick=async()=>{
+  await update(ref(db,'meta'),{version:APP_VERSION});
+  localStorage.setItem('tried_v',APP_VERSION);
+  toast('Обновление разослано');
+};
 $('#logout').onclick=()=>signOut(auth);
 onAuthStateChanged(auth,u=>{
   isAdmin=!!u&&u.email===ADMIN_EMAIL;
