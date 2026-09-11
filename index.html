@@ -367,7 +367,7 @@ const firebaseConfig = {
   appId:             "1:347269868166:web:57061875897739b3c1bf07"
 };
 const ADMIN_EMAIL = "otabekmirnosirov@gmail.com";
-const APP_VERSION = "2026-09-11-a";   // меняется при каждом обновлении файла
+const APP_VERSION = "2026-09-11-b";   // меняется при каждом обновлении файла
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, onValue, update, push, set, remove }
@@ -389,8 +389,8 @@ const notify = t=>{ try{ tg?.HapticFeedback?.notificationOccurred(t||'success');
 const TGID = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : null;
 
 const $ = s=>document.querySelector(s);
-const LEVELS=[{p:0,n:'Новичок',e:'🌱'},{p:25,n:'Активист',e:'⭐'},
-              {p:60,n:'Мастер',e:'🚀'},{p:120,n:'Легенда',e:'👑'}];
+const LEVELS=[{p:0,n:'Новичок',e:'🌱'},{p:30,n:'Активист',e:'⭐'},
+              {p:90,n:'Мастер',e:'🚀'},{p:200,n:'Легенда',e:'👑'}];
 let S={meta:{},students:{},log:{},awards:{}};
 let ME=localStorage.getItem('me')||null, isAdmin=false, prevPts=null, firstLoad=true;
 
